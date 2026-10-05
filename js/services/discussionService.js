@@ -1,0 +1,10 @@
+import { db, auth, collection, doc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from "../firebase.js";
+import { APP_CONFIG } from "../config.js";
+export async function listPosts(lectureId){const q=query(collection(db,"discussionPosts"),where("lectureId","==",lectureId),where("status","==","active"),orderBy("createdAt","asc"));const s=await getDocs(q);return s.docs.map(d=>({id:d.id,...d.data()}));}
+export async function createPost({lectureId,courseId,content,parentId=null}){if(!auth.currentUser)throw new Error("سجل الدخول أولًا.");const text=String(content||"").trim();if(!text)throw new Error("اكتب سؤالك أولًا.");const ref=await addDoc(collection(db,"discussionPosts"),{lectureId,courseId,content:text.slice(0,3000),parentId,studentId:auth.currentUser.uid,authorName:auth.currentUser.displayName||"طالب",authorRole:"student",status:"active",isInstructorReply:false,isPinned:false,isOfficial:false,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return ref.id;}
+export const updatePost=(id,content)=>updateDoc(doc(db,"discussionPosts",id),{content:String(content||"").trim().slice(0,3000),updatedAt:serverTimestamp()});
+export const deletePost=id=>deleteDoc(doc(db,"discussionPosts",id));
+export const reportPost=(postId,reason)=>addDoc(collection(db,"discussionReports"),{postId,reporterId:auth.currentUser.uid,reason:String(reason||"محتوى غير مناسب").slice(0,500),status:"open",createdAt:serverTimestamp()});
+async function adminCall(url,body){if(!auth.currentUser)throw new Error("سجل الدخول أولًا.");const r=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${await auth.currentUser.getIdToken()}`},body:JSON.stringify(body)});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error("تعذر تنفيذ العملية الإدارية.");return d;}
+export const createInstructorReply=(data)=>adminCall(APP_CONFIG.discussionReplyUrl,data);
+export const setOfficialReply=(postId,pinned=true)=>adminCall(APP_CONFIG.officialReplyUrl,{postId,pinned});

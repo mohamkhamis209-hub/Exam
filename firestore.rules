@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function user() { return signedIn() ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data : null; }
+    function isSuper() { return signedIn() && user().role == 'super_admin' && user().status == 'active'; }
+    function isAssistant() { return signedIn() && user().role == 'assistant' && user().status == 'active'; }
+    function can(p) { return isSuper() || (isAssistant() && user().permissions[p] == true); }
+    function isStudent() { return signedIn() && user().role == 'student'; }
+    function activeStudent() { return isStudent() && user().status == 'active' && user().classId != null && user().classId != ''; }
+    function ownUser(uid) { return signedIn() && request.auth.uid == uid; }
+    function ownStudent(resourceData) { return signedIn() && isStudent() && resourceData.authUid == request.auth.uid; }
+
+    match /users/{uid} {
+      allow read: if ownUser(uid) || isSuper() || can('students');
+      allow create: if isSuper();
+      allow update, delete: if isSuper();
+    }
+
+    match /registrationRequests/{id} {
+      allow read: if can('students');
+      allow create, update, delete: if false;
+    }
+
+    match /students/{id} {
+      allow read: if ownStudent(resource.data) || can('students');
+      allow create, update, delete: if can('students');
+    }
+
+    match /classes/{id} {
+      allow read: if resource.data.status == 'active' || can('classes');
+      allow create, update, delete: if can('classes');
+    }
+    match /subjects/{id} {
+      allow read: if (activeStudent() && resource.data.classId == user().classId && resource.data.status == 'active') || can('subjects');
+      allow create, update, delete: if can('subjects');
+    }
+    match /courses/{id} {
+      allow read: if (activeStudent() && resource.data.classId == user().classId && resource.data.status == 'active') || can('courses');
+      allow create, update, delete: if can('courses');
+    }
+    match /lectures/{id} {
+      allow read: if (activeStudent() && resource.data.status == 'active') || can('lectures');
+      allow create, update, delete: if can('lectures');
+    }
+    match /books/{id} {
+      allow read: if (activeStudent() && resource.data.status == 'active') || can('books');
+      allow create, update, delete: if can('books');
+    }
+    match /exams/{id} {
+      allow read: if (activeStudent() && resource.data.status == 'active' && (!('classId' in resource.data) || resource.data.classId == '' || resource.data.classId == user().classId)) || can('exams');
+      allow create, update, delete: if can('exams');
+    }
+    match /questions/{id} {
+      allow read: if can('exams');
+      allow create, update, delete: if can('exams');
+    }
+    match /results/{id} {
+      allow read: if (activeStudent() && resource.data.studentId == request.auth.uid) || can('results');
+      allow create, update, delete: if can('results');
+    }
+    match /resultKeys/{id} { allow read, write: if false; }
+
+    match /discussionPosts/{id} {
+      allow read: if activeStudent() || can('discussions');
+      allow create: if activeStudent()
+        && request.resource.data.studentId == request.auth.uid
+        && request.resource.data.authorRole == 'student'
+        && request.resource.data.isInstructorReply == false
+        && request.resource.data.isPinned == false
+        && request.resource.data.isOfficial == false;
+      allow update: if can('discussions') || (activeStudent() && resource.data.studentId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content','updatedAt']));
+      allow delete: if can('discussions') || (activeStudent() && resource.data.studentId == request.auth.uid);
+    }
+    match /discussionReports/{id} {
+      allow create: if activeStudent() && request.resource.data.reporterId == request.auth.uid;
+      allow read, update, delete: if can('discussions');
+    }
+
+    match /notifications/{id} {
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || can('students');
+      allow create: if can('students');
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid || can('students');
+    }
+    match /activityLogs/{id} {
+      allow read: if isSuper();
+      allow create: if can('students') || can('classes') || can('subjects') || can('courses') || can('lectures') || can('books') || can('exams') || can('discussions');
+      allow update, delete: if isSuper();
+    }
+    match /images/{id} {
+      allow read: if can('images');
+      allow create, update, delete: if can('images');
+    }
+    match /uniqueKeys/{id} { allow read, write: if false; }
+    match /phoneLocks/{id} { allow read, write: if false; }
+  }
+}

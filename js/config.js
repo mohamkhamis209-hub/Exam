@@ -1,0 +1,20 @@
+export const APP_CONFIG = Object.freeze({
+  name: "منصتك التعليمية",
+  whatsappNumber: "201033459821",
+  functionsBaseUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net",
+  studentLoginUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/studentLogin",
+  registrationRequestUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/submitRegistrationRequest",
+  profileCompletionUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/completeStudentProfile",
+  createStudentUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/createStudent",
+  updateStudentUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/updateStudentByAdmin",
+  createAssistantUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/createAssistant",
+  updateAssistantUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/updateAssistant",
+  discussionReplyUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/createDiscussionReply",
+  officialReplyUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/setOfficialReply",
+  getExamQuestionsUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/getExamQuestions",
+  submitExamUrl: "https://europe-west1-mr-omar-new.cloudfunctions.net/submitExam",
+  imageProxyUrl: "",
+  imageMaxBytes: 5 * 1024 * 1024,
+  allowedImageTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+  pageSize: 20
+});

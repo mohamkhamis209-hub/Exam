@@ -1,0 +1,9 @@
+{
+  "indexes": [
+    {"collectionGroup":"discussionPosts","queryScope":"COLLECTION","fields":[{"fieldPath":"lectureId","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"createdAt","order":"ASCENDING"}]},
+    {"collectionGroup":"discussionPosts","queryScope":"COLLECTION","fields":[{"fieldPath":"lectureId","order":"ASCENDING"},{"fieldPath":"isInstructorReply","order":"ASCENDING"},{"fieldPath":"isPinned","order":"ASCENDING"}]},
+    {"collectionGroup":"questions","queryScope":"COLLECTION","fields":[{"fieldPath":"examId","order":"ASCENDING"},{"fieldPath":"sortOrder","order":"ASCENDING"}]},
+    {"collectionGroup":"students","queryScope":"COLLECTION","fields":[{"fieldPath":"classId","order":"ASCENDING"},{"fieldPath":"createdAt","order":"DESCENDING"}]}
+  ],
+  "fieldOverrides": []
+}
